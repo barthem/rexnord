@@ -11,13 +11,10 @@ from multiprocessing import Queue
 
 
 
-HOST = '145.52.172.196'     # The server's hostname or IP address
-
-
-ipSideA = "127.0.0.1"
-ipSideB = "127.0.0.1"
+ipSideA = "192.168.0.1"
+ipSideB = "192.168.0.3"
 portSideA = 12345           # The port used by the server
-portSideB = 13338           # port used by the other side of bridge
+portSideB = 9000           # port used by the other side of bridge
 
 def tcpClient(ipaddres, poort, inputQue, outputQue):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -30,8 +27,10 @@ def tcpClient(ipaddres, poort, inputQue, outputQue):
 
 def tcpListen(socket, ipaddres, poort, queue):
     socket.connect((ipaddres, poort))
-    print("connection astablished at ", ipaddres)
+    print("connection astablished at ",ipaddres , poort)
+    time.sleep(3)
     while True:
+
         data = socket.recv(1024)
         queue.put(data)
         if data:
@@ -44,12 +43,8 @@ def tcpSend(socket, queue):
     while True:
         if(queue.empty() is False):
             data = queue.get()
-            print("found this in queue!: ", data.decode('utf-8'))
+            print("sending: ", data.decode('utf-8'))
             socket.send(data)
-
-
-
-
 
 
 if __name__ == '__main__':
@@ -57,14 +52,16 @@ if __name__ == '__main__':
     qb = Queue()
     sa = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sb = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print("sockets made!")
+
 
     sideAlisten = threading.Thread(name='sidea listen thread', target=tcpListen, args=(sa, ipSideA, portSideA, qa,))
     sideAlisten.start()
     print("started ", sideAlisten.getName())
 
-    sideAlisten = threading.Thread(name='side B listen thread', target=tcpListen, args=(sb, ipSideB, portSideB, qb,))
-    sideAlisten.start()
-    print("started ", sideAlisten.getName())
+    sideBlisten = threading.Thread(name='side B listen thread', target=tcpListen, args=(sb, ipSideB, portSideB, qb,))
+    sideBlisten.start()
+    print("started ", sideBlisten.getName())
 
     time.sleep(5)
 
@@ -77,4 +74,4 @@ if __name__ == '__main__':
     print("started ", sideAsend.getName())
 
     sideAlisten.join()
-    sideAsend.join()
+    sideBlisten.join()
