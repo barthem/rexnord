@@ -1,8 +1,8 @@
 import socket
 import time
 
-HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-PORT = 13338        # Port to listen on (non-privileged ports are > 1023)
+HOST = '192.168.0.25'  # Standard loopback interface address (localhost)
+PORT = 5555        # Port to listen on (non-privileged ports are > 1023)
 
 
 
@@ -14,7 +14,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     print("connection made!")
 
     while(True):
-        conn.send(b"ping")
+        conn.send(b"63")
         print("sended ping!")
         data = conn.recv(1024)
         # if not data:

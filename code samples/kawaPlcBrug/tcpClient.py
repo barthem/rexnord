@@ -4,8 +4,8 @@ import socket
 import time
 
 
-HOST = '192.168.0.3'  # The server's hostname or IP address
-PORT = 9000        # The port used by the server
+HOST = '127.0.0.1'  # The server's hostname or IP address
+PORT = 12345        # The port used by the server
 
 # try:
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,8 +22,8 @@ while True :
         break
     print("sending message:", data)
     s.send(data.encode())
-    # print(s.recv(1024))
-    time.sleep(1.25)
+    print(s.recv(1024))
+    time.sleep(30.25)
 s.send("quit".encode())
 s.close()
 

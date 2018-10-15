@@ -17,8 +17,8 @@ from multiprocessing import Queue
 
 # 9.58          38.58
 
-dock = [[137 , 180,             #coordinates of the docks
-         210, 251],
+dock = [[122 , 180,             #coordinates of the docks
+         206, 252],
         [134, 182,
          329, 378]]
 
@@ -71,35 +71,40 @@ def findContours(image, drawImage):
     return drawContours(contours, drawImage)
 
 
-def drawContours(contours, drawImage):
-    # calculates the smallest [0][0] and the biggest [100][100] value to make a square
-    biggest = [0, 0]
-    smallest = [10000, 10000]
-    for cnt in contours:
-        for x in range(len(cnt)):
-            if(cnt[x][0][0] > biggest[0] and cnt[x][0][1] > biggest[1]):
-                biggest = [cnt[x][0][0], cnt[x][0][1]]
-            if(cnt[x][0][0] < smallest[0] and cnt[x][0][1] < smallest[1]):
-                smallest = [cnt[x][0][0], cnt[x][0][1]]
+def drawSelectedArea(image, area):
+    for dock in area:
+        print(dock)
+        contour = [np.array([[dock[1], dock[3]], [dock[0], dock[2]]], dtype=np.int32)]
+        for cnt in contour:
+            cv2.drawContours(image, [cnt], 0, (255, 0, 128), 2)
+
+def drawContours2(contours, drawImage):
+
     backtorgb = cv2.cvtColor(drawImage,cv2.COLOR_GRAY2RGB) #convert an image to color so we can draw a colored countour
 
     cnt = contours[0]
 
     contours34 = [np.array([smallest, [smallest[0], biggest[1]], biggest, [biggest[0], smallest[1]]], dtype=np.int32)] #draws square
-    print(contours34)
     for cnt in contours34:
         cv2.drawContours(backtorgb,[cnt],0,(255,0,0),2)
     return backtorgb, smallest, biggest
 
+def drawContours(drawImage):
+
+    backtorgb = cv2.cvtColor(drawImage,cv2.COLOR_GRAY2RGB) #convert an image to color so we can draw a colored countour
 
 
+    contours34 = [np.array([[len(drawImage)/2-1, 0], [len(drawImage)/2-1, len(drawImage)-1]], dtype=np.int32)] #draws square
+    for cnt in contours34:
+        cv2.drawContours(backtorgb,[cnt],0,(255,0,0),2)
+    return backtorgb
 
-def calculateSide(image, smallest, biggest):
+
+def calculateSide(image):
     # calculate white pixels in left side
     whiteCounterLeft = 0
-    for y in range(smallest[1], biggest[1], 1): # loop through x axis
-
-        for x in range(smallest[0], int(biggest[0]/2), 1): #loop through y axis
+    for y in range(0, len(image), 1): # loop through x axis
+        for x in range(0, int((len(image[0]))/2), 1): #loop through y axis
             if(image[y][x] == 255):
                 whiteCounterLeft += 1
     print("left:", whiteCounterLeft)
@@ -107,13 +112,18 @@ def calculateSide(image, smallest, biggest):
 
     # calculate white pixels on right side
     whiteCounterRight = 0
-    for y in range(smallest[1], biggest[1], 1): # loop through x axis
-        for x in range(int(biggest[0]/2),biggest[0] , 1): #loop through y axis
+    for y in range(0, len(image), 1): # loop through x axis
+        # print(int((len(image[0]))/2))
+        # print(len(image)-1)
+        for x in range(int((len(image[0]))/2), len(image[0])-1, 1): #loop through y axis
             if (image[y][x] == 255):
                 whiteCounterRight += 1
     print("right:", whiteCounterRight)
 
-    if(whiteCounterLeft > whiteCounterRight):
+    if(whiteCounterLeft+ whiteCounterRight > 1600):
+        print("empty")
+        return 3
+    elif(whiteCounterLeft > whiteCounterRight):
         return 1
     elif(whiteCounterRight > whiteCounterLeft):
             return 2
@@ -125,6 +135,7 @@ def calculateSide(image, smallest, biggest):
 
 def main():
     unmodifiedImage = takeImage()
+    drawSelectedArea(unmodifiedImage, dock)
     cv2.imshow("unmod image", unmodifiedImage)
 
     # unmodifiedImage = loadImage("loadingDock2.png")
@@ -146,16 +157,23 @@ def main():
     erodedImage = erodeImg(bwImage)
     cv2.imshow('black and white', erodedImage)
 
-    conTour, smallest, biggest = findContours(erodedImage, erodedImage)
-    cv2.imshow('greyqwdwqImage', conTour)
 
-    result = calculateSide(erodedImage, smallest, biggest)
+    contour_image = drawContours(erodedImage)
+    cv2.imshow('contour', contour_image)
+
+
+    print(len(erodedImage))
+
+    # conTour, smallest, biggest = findContours(erodedImage, erodedImage)
+    # cv2.imshow('greyqwdwqImage', conTour)
+
+    result = calculateSide(erodedImage)
     print(result)
 
     cv2.waitKey(0)  # Waits forever for user to press any key if 0
     cv2.destroyAllWindows()  # Closes displayed windows
 
-    return result
+    # return result
 
 if __name__ == "__main__":
     # while 1:

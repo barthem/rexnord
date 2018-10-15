@@ -7,6 +7,10 @@ import cv2
 refPt = []
 cropping = False
 
+def takeImage():
+    cap = cv2.VideoCapture(1)
+    ret, frame = cap.read()
+    return frame
 
 def click_and_crop(event, x, y, flags, param):
     # grab references to the global variables
@@ -36,7 +40,8 @@ def click_and_crop(event, x, y, flags, param):
 
 
 # load the image, clone it, and setup the mouse callback function
-image = cv2.imread("loadingDock.png")
+# image = cv2.imread("loadingDock.png")
+image = takeImage()
 clone = image.copy()
 cv2.namedWindow("image")
 cv2.setMouseCallback("image", click_and_crop)
