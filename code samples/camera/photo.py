@@ -1,9 +1,12 @@
 import getpass
 import telnetlib
 from ftplib import FTP
+import cv2
+import time
 
-HOST = "192.168.0.20"
-port = 10000
+
+HOST = "192.168.0.58"
+port = 10001
 user = 'admin'
 password = ''
 debug = True
@@ -32,5 +35,15 @@ def downloadPhoto():
 
     ftp.close()
 
-takePhoto()
-downloadPhoto()
+
+while(True):
+    # Capture frame-by-frame
+    takePhoto()
+    downloadPhoto()
+    image = cv2.imread('image.jpg')
+    cv2.imshow('sffr', image)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+    # time.sleep(0.1)
+

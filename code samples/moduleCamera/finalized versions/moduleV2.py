@@ -212,7 +212,7 @@ if __name__ == "__main__":
                 sa.send(result.encode())
     # while 1:
     #     print(main())
-    #     # time.sleep(1)
+    #     time.sleep(5)
 
     # main()
 
