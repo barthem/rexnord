@@ -21,13 +21,18 @@ dock = [[122 , 180,             #coordinates of the docks
          206, 252],
         [134, 182,
          329, 378]]
+global selectedDock
+selectedDock = len(dock)
 
-host = "192.168.0.25"
-port = 5555
+host = "192.168.0.1"
+port = 12345
 
 alpha = 1.4
 beta = 20
 thresh = 128
+
+# global selectedDock
+
 
 def takeImage():
     cap = cv2.VideoCapture(1)
@@ -124,9 +129,9 @@ def calculateSide(image):
         print("empty")
         return 3
     elif(whiteCounterLeft > whiteCounterRight):
-        return 1
+        return str(selectedDock+1) + str(2)
     elif(whiteCounterRight > whiteCounterLeft):
-            return 2
+            return str(selectedDock+1)+ str(1)
     else:
         print("error!")
         return 3
@@ -134,7 +139,14 @@ def calculateSide(image):
 
 
 def main():
+    global selectedDock
+    selectedDock = selectedDock + 1
+    if(selectedDock >= len(dock)):
+        selectedDock = 0
+    print("selected dock is", selectedDock)
+
     unmodifiedImage = takeImage()
+    # unmodifiedImage = cv2.flip(unmodifiedImage, 0 )
     drawSelectedArea(unmodifiedImage, dock)
     cv2.imshow("unmod image", unmodifiedImage)
 
@@ -143,7 +155,7 @@ def main():
     bright_image = brightness(unmodifiedImage)
     cv2.imshow('bright', bright_image)
 
-    croppedImage = cropImage(bright_image, 0)
+    croppedImage = cropImage(bright_image, selectedDock)
     cv2.imshow('cropped', croppedImage)
 
 
@@ -170,36 +182,37 @@ def main():
     result = calculateSide(erodedImage)
     print(result)
 
-    cv2.waitKey(0)  # Waits forever for user to press any key if 0
-    cv2.destroyAllWindows()  # Closes displayed windows
+    cv2.waitKey(5)  # Waits forever for user to press any key if 0
+    return result
+    # cv2.destroyAllWindows()  # Closes displayed windows
 
-    # return result
+
 
 if __name__ == "__main__":
-    # while 1:
-    #     try:
-    #         sa = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #         sa.connect((host, port))
-    #         # print(sa)
-    #         print("connection astablished to ",host , port)
-    #     except:
-    #         print("failed to make connection. Sleep briefly & try again")
-    #         time.sleep(5)
-    #         continue
-    #
-    #     while True:
-    #         data = sa.recv(1024)
-    #         if data:
-    #             data = data.decode('utf-8')
-    #             print("recieved:", data)
-    #         if data == "63":
-    #             # cv2.destroyAllWindows()  # Closes displayed windows
-    #             result = main()
-    #             print("sending: ", result)
-    #             sa.send(bytes(result))
     while 1:
-        print(main())
-        # time.sleep(1)
+        try:
+            sa = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sa.connect((host, port))
+            # print(sa)
+            print("connection astablished to ",host , port)
+        except:
+            print("failed to make connection. Sleep briefly & try again")
+            time.sleep(5)
+            continue
+
+        while True:
+            data = sa.recv(1024)
+            if data:
+                data = data.decode('utf-8')
+                print("recieved:", data)
+            if data == "63":
+                # cv2.destroyAllWindows()  # Closes displayed windows
+                result = str(main())
+                print("sending: ", result)
+                sa.send(result.encode())
+    # while 1:
+    #     print(main())
+    #     # time.sleep(1)
 
     # main()
 
