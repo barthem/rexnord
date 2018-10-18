@@ -2,7 +2,7 @@ import socket
 import time
 
 HOST = '192.168.0.25'  # Standard loopback interface address (localhost)
-PORT = 12345        # Port to listen on (non-privileged ports are > 1023)
+PORT = 9000        # Port to listen on (non-privileged ports are > 1023)
 
 
 
@@ -23,7 +23,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         #     break
         string = data.decode('utf-8')
         print("recieved:", string)
-        time.sleep(2)
 
 s.close()
 

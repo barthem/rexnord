@@ -7,13 +7,42 @@ Created on Wed Sep 12 09:23:17 2018
 # All imports
 import cv2
 import numpy as np
-import telnetlib as tl
+import telnetlib
 import math
 import socket
 import struct
 import sys
+from ftplib import FTP
 
+debug = True
+HOST = "192.168.0.58"
+port = 10001
+user = 'admin'
+password = ''
 # --------- Classes ---------- #
+
+def takePhoto():
+    tn = telnetlib.Telnet(host=HOST, port=port)
+    if(debug):
+        tn.set_debuglevel(1)
+    tn.read_until(b'User: ')
+    tn.write(b"admin\r\n")  # the user name is admin
+    tn.read_until(b'Password: ')
+    tn.write(b"\r\n")  # there is no password - just return - now logged in
+    tn.read_until(b'User Logged In')
+    tn.write(b"SE8\r\n")  # Take picture and save it as image.jpg
+    tn.close()
+
+def downloadPhoto():
+    ftp = FTP(HOST)
+    if(debug):
+        ftp.set_debuglevel(level=1)
+
+    ftp.login(user)
+    ftp.retrbinary('RETR image.jpg', open('image.jpg', 'wb').write)
+
+    ftp.close()
+
 class socketConnector():
     def __init__(self):
         self.tcpip = '192.168.0.3' # PLC IP
@@ -61,7 +90,7 @@ class imageManipulation():
         #tn.read_until("1")
         
         #retrieve image
-        self.img = cv2.imread('4.BMP')
+        self.img = cv2.imread('image.jpg')
         
         
     def grayScale(self, frame):
@@ -166,10 +195,10 @@ sc.connect()
 im = imageManipulation()
 
 while True:       
-    sc.waitForData()
+    # sc.waitForData()
     
-    host = "192.168.0.20"
-    port = "10000"
+    host = "192.168.0.58"
+    port = "10001"
     user = "admin"
     
     #tn = tl.Telnet(host, port)
@@ -177,7 +206,9 @@ while True:
     #tn.write(b"/r/n")
     
 
-    
+    takePhoto()
+    downloadPhoto()
+
     im.getFrame()
     frame = im.grayScale(im.img)
     cv2.imwrite('pinhead1.png', frame)
@@ -191,7 +222,7 @@ while True:
     valid = im.detectCircles(frame)
     cv2.imwrite('pinhead3.png', frame)
     
-    sc.sendData(valid)
+    # sc.sendData(valid)
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
         cv2.destroyAllWindows()
