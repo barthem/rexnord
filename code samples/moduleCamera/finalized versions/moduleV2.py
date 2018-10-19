@@ -24,7 +24,7 @@ dock = [[122 , 180,             #coordinates of the docks
 global selectedDock
 selectedDock = len(dock)
 
-host = "192.168.0.25"
+host = "192.168.0.1"
 port = 12345
 
 alpha = 1.4
@@ -189,30 +189,30 @@ def main():
 
 
 if __name__ == "__main__":
-    # while 1:
-    #     try:
-    #         sa = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #         sa.connect((host, port))
-    #         # print(sa)
-    #         print("connection astablished to ",host , port)
-    #     except:
-    #         print("failed to make connection. Sleep briefly & try again")
-    #         time.sleep(5)
-    #         continue
-    #
-    #     while True:
-    #         data = sa.recv(1024)
-    #         if data:
-    #             data = data.decode('utf-8')
-    #             print("recieved:", data)
-    #         if data == "63":
-    #             # cv2.destroyAllWindows()  # Closes displayed windows
-    #             result = str(main())
-    #             print("sending: ", result)
-    #             sa.send(result.encode())
     while 1:
-        print(main())
-        time.sleep(5)
+        try:
+            sa = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sa.connect((host, port))
+            # print(sa)
+            print("connection astablished to ",host , port)
+        except:
+            print("failed to make connection. Sleep briefly & try again")
+            time.sleep(5)
+            continue
+
+        while True:
+            data = sa.recv(1024)
+            if data:
+                data = data.decode('utf-8')
+                print("recieved:", data)
+            if data == "63":
+                # cv2.destroyAllWindows()  # Closes displayed windows
+                result = str(main())
+                print("sending: ", result)
+                sa.send(result.encode())
+    # while 1:
+    #     print(main())
+    #     time.sleep(5)
 
     # main()
 

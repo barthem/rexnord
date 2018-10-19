@@ -4,8 +4,8 @@ import socket
 import time
 
 
-HOST = '192.168.0.1'  # The server's hostname or IP address
-PORT = 9000        # The port used by the server
+HOST = '192.168.0.25'  # The server's hostname or IP address
+PORT = 2000        # The port used by the server
 
 # try:
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
