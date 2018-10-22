@@ -9,7 +9,7 @@ HOST = "192.168.0.58"
 port = 10001
 user = 'admin'
 password = ''
-debug = True
+debug = False
 
 
 
