@@ -13,6 +13,7 @@ import socket
 import struct
 import sys
 from ftplib import FTP
+import time
 
 debug = True
 HOST = "192.168.0.58"
@@ -119,8 +120,12 @@ class imageManipulation():
         return threshframe
     
     def blackWhite(self, frame):
-        bw = cv2.threshold(frame, 127,255,cv2.THRESH_BINARY)[1]
+        # bw = cv2.threshold(frame, 127,255,cv2.THRESH_BINARY)[1]
+        bw = cv2.threshold(frame, 127, 255, cv2.THRESH_BINARY)[1]
+
         return bw
+
+
         
     def detectCircles(self, frame):
         circles = cv2.HoughCircles(frame, cv2.HOUGH_GRADIENT,1,60,param1=100,param2=30,minRadius=50,maxRadius=140)
@@ -186,6 +191,10 @@ class imageManipulation():
                 
         return pin
 
+    def cropImage(self, image, array):  # crops image acording to dock number
+        crop_img = image[array[0]:array[1], array[2]:array[3]]
+        return crop_img
+
 # ----------- End of classes ---------- #
 
 # ------------   Code  ---------------- #
@@ -200,6 +209,7 @@ while True:
     host = "192.168.0.58"
     port = "10001"
     user = "admin"
+    cropArray = [269, 408, 387, 566]
     
     #tn = tl.Telnet(host, port)
     #tn.write(user +  b"/r/n")
@@ -212,16 +222,30 @@ while True:
     im.getFrame()
     frame = im.grayScale(im.img)
     cv2.imwrite('pinhead1.png', frame)
-    frame = im.threshFrame(frame)
+    # frame = im.threshFrame(frame)
+    frame = im.blackWhite(frame)
+
+    frame = im.cropImage(frame, cropArray)
+    cv2.imshow('cropped img', frame)
+
     frame = im.contours(frame)
-    cv2.imwrite('pinhead2.png', frame)
+    cv2.imshow('pinhead2.png', frame)
     #frame = im.detectCircles(frame)
-    
+
+
+    # im.getFrame()
+    # frame = im.grayScale(im.img)
+    # cv2.imwrite('pinhead1.png', frame)
+    # cv2.imshow('pinhead1', frame)
+    # frame = im.cropImage(im.img, cropArray)
+
     frame = im.grayScale(frame)
     #frame = im.threshFrame(frame)
     valid = im.detectCircles(frame)
     cv2.imwrite('pinhead3.png', frame)
-    
+
+    time.sleep(1)
+
     # sc.sendData(valid)
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
