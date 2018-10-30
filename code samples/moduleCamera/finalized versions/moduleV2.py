@@ -5,9 +5,22 @@ import time
 import _thread
 import threading
 import socket
+import random
 from time import sleep
 from multiprocessing import Queue
+random.seed(time.time())
+# -*- coding: utf-8 -*-
+"""
+@name moduleV2
+@author: Bart de Langen
+@description: This program is used to detect the way the Rexnord modules are placed. It uses a HD webcam to make an
+picture of the bays, then it creates cropped version from it using the coordinates in the dock array variabel.
+It then does its image vision magic and sends a dock nummer (for example 2), followed by the side the modulehole is one where 1 equals life
+and 2 equals right. so a module that is right placed in bay 1 would be the value "12"
 
+"""
+
+debug = False
 #white = 255, black = 0
 
 # 9,2           38, 2
@@ -16,13 +29,31 @@ from multiprocessing import Queue
 
 
 # 9.58          38.58
+#
+# dock = [[90, 131,             #coordinates of the docks
+#          91, 128],
+#         [91, 134,
+#          210, 247],
+#         [89, 134,
+#          332, 377],
+#         [86, 132,
+#          453, 498]
+#         ]
 
-dock = [[122 , 180,             #coordinates of the docks
-         206, 252],
-        [134, 182,
-         329, 378]]
+dock = [
+        [86, 132,
+         453, 498],
+        [89, 134,
+         332, 377],
+        [91, 134,
+         210, 247],
+        [90, 131,             #coordinates of the docks
+         91, 128]
+        ]
+
 global selectedDock
-selectedDock = len(dock)
+selectedDock = random.randint(0, len(dock)-1) #select een random begin dock
+print(selectedDock)
 
 host = "192.168.0.1"
 port = 12345
@@ -30,9 +61,6 @@ port = 12345
 alpha = 1.4
 beta = 20
 thresh = 128
-
-# global selectedDock
-
 
 def takeImage():
     cap = cv2.VideoCapture(1)
@@ -83,17 +111,6 @@ def drawSelectedArea(image, area):
         for cnt in contour:
             cv2.drawContours(image, [cnt], 0, (255, 0, 128), 2)
 
-def drawContours2(contours, drawImage):
-
-    backtorgb = cv2.cvtColor(drawImage,cv2.COLOR_GRAY2RGB) #convert an image to color so we can draw a colored countour
-
-    cnt = contours[0]
-
-    contours34 = [np.array([smallest, [smallest[0], biggest[1]], biggest, [biggest[0], smallest[1]]], dtype=np.int32)] #draws square
-    for cnt in contours34:
-        cv2.drawContours(backtorgb,[cnt],0,(255,0,0),2)
-    return backtorgb, smallest, biggest
-
 def drawContours(drawImage):
 
     backtorgb = cv2.cvtColor(drawImage,cv2.COLOR_GRAY2RGB) #convert an image to color so we can draw a colored countour
@@ -125,7 +142,7 @@ def calculateSide(image):
                 whiteCounterRight += 1
     print("right:", whiteCounterRight)
 
-    if(whiteCounterLeft+ whiteCounterRight > 1600):
+    if(whiteCounterLeft+ whiteCounterRight > 900):
         print("empty")
         return 3
     elif(whiteCounterLeft > whiteCounterRight):
@@ -140,76 +157,87 @@ def calculateSide(image):
 
 def main():
     global selectedDock
-    selectedDock = selectedDock + 1
-    if(selectedDock >= len(dock)):
-        selectedDock = 0
-    print("selected dock is", selectedDock)
+    emptyDock = True
+    while emptyDock:
+        selectedDock = selectedDock + 1
+        if(selectedDock >= len(dock)):
+            selectedDock = 0
+        print("selected dock is", selectedDock+1)
 
-    unmodifiedImage = takeImage()
-    # unmodifiedImage = cv2.flip(unmodifiedImage, 0 )
-    drawSelectedArea(unmodifiedImage, dock)
-    cv2.imshow("unmod image", unmodifiedImage)
+        unmodifiedImage = takeImage()
+        # unmodifiedImage = cv2.flip(unmodifiedImage, 0 )
+        # drawSelectedArea(unmodifiedImage, dock)
+        cv2.imshow("unmod image", unmodifiedImage)
 
-    # unmodifiedImage = loadImage("loadingDock2.png")
-    #
-    bright_image = brightness(unmodifiedImage)
-    cv2.imshow('bright', bright_image)
+        # unmodifiedImage = loadImage("loadingDock2.png")
+        #
+        bright_image = brightness(unmodifiedImage)
+        cv2.imshow('bright', bright_image)
 
-    croppedImage = cropImage(bright_image, selectedDock)
-    cv2.imshow('cropped', croppedImage)
-
-
-
-    grey_image = toGreyscale(croppedImage)
-    cv2.imshow('greyImage', grey_image)
-
-    bwImage = toBW(grey_image)
-    cv2.imshow('black and white', bwImage)
-
-    erodedImage = erodeImg(bwImage)
-    cv2.imshow('black and white', erodedImage)
+        croppedImage = cropImage(bright_image, selectedDock)
+        cv2.imshow('cropped', croppedImage)
 
 
-    contour_image = drawContours(erodedImage)
-    cv2.imshow('contour', contour_image)
+
+        grey_image = toGreyscale(croppedImage)
+        cv2.imshow('greyImage', grey_image)
+
+        bwImage = toBW(grey_image)
+        cv2.imshow('black and white', bwImage)
+
+        erodedImage = erodeImg(bwImage)
+        cv2.imshow('black and white', erodedImage)
 
 
-    print(len(erodedImage))
+        contour_image = drawContours(erodedImage)
+        cv2.imshow('contour', contour_image)
 
-    # conTour, smallest, biggest = findContours(erodedImage, erodedImage)
-    # cv2.imshow('greyqwdwqImage', conTour)
 
-    result = calculateSide(erodedImage)
-    print(result)
+        # print(len(erodedImage))
 
-    cv2.waitKey(5)  # Waits forever for user to press any key if 0
+        # conTour, smallest, biggest = findContours(erodedImage, erodedImage)
+        # cv2.imshow('greyqwdwqImage', conTour)
+
+        result = calculateSide(erodedImage)
+        if(result != 3):
+            emptyDock = False
+        print(result)
+
+        cv2.waitKey(1)  # Waits forever for user to press any key if 0
     return result
     # cv2.destroyAllWindows()  # Closes displayed windows
 
 
 
 if __name__ == "__main__":
-    while 1:
-        try:
-            sa = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sa.connect((host, port))
-            # print(sa)
-            print("connection astablished to ",host , port)
-        except:
-            print("failed to make connection. Sleep briefly & try again")
+    if (debug):
+        while 1:
+            print("result main", main())
             time.sleep(5)
-            continue
+    else:
+        while 1:
+            try:
+                sa = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sa.connect((host, port))
+                # print(sa)
+                print("connection astablished to ",host , port)
+            except Exception as e:
+                print(e)
+                print("failed to make connection. Sleep briefly & try again")
+                time.sleep(5)
+                continue
+            print("entering loop")
+            while True:
 
-        while True:
-            data = sa.recv(1024)
-            if data:
-                data = data.decode('utf-8')
-                print("recieved:", data)
-            if data == "63":
-                # cv2.destroyAllWindows()  # Closes displayed windows
-                result = str(main())
-                print("sending: ", result)
-                sa.send(result.encode())
+                data = sa.recv(1024)
+                if data:
+                    data = data.decode('utf-8')
+                    print("recieved:", data)
+                if data == "63":
+                    # cv2.destroyAllWindows()  # Closes displayed windows
+                    result = str(main())
+                    print("sending: ", result)
+                    sa.send(result.encode())
     # while 1:
     #     print(main())
     #     time.sleep(5)

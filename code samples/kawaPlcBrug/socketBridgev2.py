@@ -27,7 +27,7 @@ def stripByte(input):
 class socketConnector():
     def __init__(self):
         self.tcpip = '192.168.0.3'  # PLC IP
-        self.port = 2000 # Port of the PLC
+        self.port = 9000 # Port of the PLC
         self.bsize = buffersize  # Buffer size
         self.connection = 0
 
@@ -49,7 +49,7 @@ class socketConnector():
 
     def sendData(self, data):
         # valid_byte = bytearray()
-        data = ord(data)
+        data = int(data)
         print("tipen byte is: ", type(data))
         # valid_byte.append(data
         sent_data = struct.pack(">h", data)
@@ -74,7 +74,7 @@ def tcpListenPLC(socket, queue):
             queue.put(stripped)
             if data:
                 # string = data.decode('utf-8')
-                print("recieved:", data, "  sending it as: ", stripped)
+                print("recieved PLC:", data, "  sending it as: ", stripped)
         # except:
         #     print("failed to make connection with plc. Sleep briefly & try again")
         #     time.sleep(5)
@@ -119,9 +119,16 @@ def tcpSend(socket, queue):
         if(queue.empty() is False):
             data = queue.get()
             print("sending RA: ", data, " data type: ", type(data))
-            valid_byte = bytearray()
-            valid_byte.append(data)
-            socket.send(valid_byte)
+            if(data == 1):
+                string = "1"
+                socket.send(string.encode())
+            elif(data == 2):
+                string = "2"
+                socket.send(string.encode())
+
+            # valid_byte = bytearray()
+            # valid_byte.append(data)
+            # socket.send(valid_byte)
 
 
 if __name__ == '__main__':
@@ -150,7 +157,7 @@ if __name__ == '__main__':
 
     sideBsend = threading.Thread(name='PLC sent thread', target=tcpSendPLC, args=(sb, qa))
     sideBsend.start()
-    print("started ", sideAsend.getName())
+    print("started ", sideBsend.getName())
 
     sideAlisten.join()
     sideBlisten.join()
